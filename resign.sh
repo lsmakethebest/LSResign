@@ -20,8 +20,7 @@ exit
 fi
 
 ####################################################################
-#此处修改成企业发布证书
-cer_name="iPhone Distribution: XXXXX Technology Co., Ltd."
+cer_name="iPhone Distribution: XXXXX  Technology Co., Ltd."
 #是否使用pod
 if [ "$4" != "" ];then
 $cer_name=$4;
@@ -61,8 +60,7 @@ cp $2 ${ipa_path}Payload/*.app/embedded.mobileprovision
 #/usr/libexec/PlistBuddy -c "Set CFBundleIdentifier $bundleid" ${ipa_path}Payload/*.app/Info.plist
 
 
-
-(/usr/bin/codesign -vvv -fs $cer_name --entitlements=entitlements.plist ${ipa_path}Payload/*.app/) || {
+(/usr/bin/codesign -vvv -fs "$cer_name" --entitlements=entitlements.plist ${ipa_path}Payload/*.app/) || {
 echo "########################   重新签名失败  #########################"
 rm -rf ${ipa_path}Payload/
 exit
