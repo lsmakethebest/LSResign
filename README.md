@@ -10,4 +10,4 @@ ipa重签名
 ### 运行脚本
 ### 会在同目录下 生成一个name-resign.ipa
 ### 也可以修改签名后的应用bundleid即修改info.plist里的bundleid，打开resign.sh里的注释即可
-### ./resign.sh /Users/liusong/Desktop/ipa/test/test.ipa  /Users/liusong/Desktop/ipa/commytogoresign.mobileprovision /Users/liusong/Desktop/ipa/entitlements.plist
+```./resign.sh /Users/liusong/Desktop/ipa/test/test.ipa  /Users/liusong/Desktop/ipa/commytogoresign.mobileprovision /Users/liusong/Desktop/ipa/entitlements.plist
