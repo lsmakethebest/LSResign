@@ -23,7 +23,7 @@ if [ $# -lt 4 ]; then
 	echoGREEN '\t参数1：ipa目录'
 	echoGREEN '\t参数2：描述文件目录'
 	echoGREEN '\t参数3：plist目录'
-	echoGREEN "\t参数4：证书名称，注意用 '' 单引号包起来，因为有可能有空格"
+	echoGREEN "\t参数4：证书名称，注意用 \"\" 双引号包起来，因为有可能有空格"
 	echoGREEN '\t参数5：新的bundleid，如果不修改可以不输入此参数'
 	exit
 fi
@@ -206,3 +206,4 @@ zip -rq ${ipa_path}/${IpaFileName}-resign.ipa ./*
 rm -rf ${unzip_path}/
 echoGREEN '压缩完成'
 echoGREEN "######################  重新签名成功  ##############################"
+
