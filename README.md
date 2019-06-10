@@ -7,8 +7,8 @@ ipa重签名
 - 3.然后修改 entitlements.plist里的XXXXX成自己的teamid
 ![image](https://github.com/lsmakethebest/Resign/blob/master/2.png)
 - 4.cd 到resigh.sh 目录下
-- 5.运行脚本 参数顺序: ipa位置 描述文件  plist   证书名称  注意证书名需要加双引号 因为中间可能有空格
-
+- 5.运行脚本 参数顺序: ipa位置 描述文件  plist   证书名称   bundleId(可不传)   注意证书名需要加双引号,因为中间可能有空格
+![image](https://github.com/lsmakethebest/Resign/blob/master/1560169611411.jpg)
 ```
 ./resign.sh /Users/liusong/Desktop/ipa/test/test.ipa  /Users/liusong/Desktop/ipa/commytogoresign.mobileprovision /Users/liusong/Desktop/ipa/entitlements.plist "iPhone Distribution: XXXXX  Technology Co., Ltd"
 ```
