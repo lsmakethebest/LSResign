@@ -1,5 +1,5 @@
 # Resign
-ipa重签名
+ipa重签名 支持重签带扩展的app和带watch的app，支持重签名framework和dylib
 
 
 - 1.先到账号里（企业账号或个人账号均可）创建一个APP ID任意此处假设为com.liusong.resign
