@@ -1,129 +1,190 @@
-#!/bin/bash
 
-RED='\033[1;31m'      # 红
-GREEN='\033[1;32m'    # 绿
-CYAN='\033[1;36m'     # 蓝
+#!/bin/sh
+
+RED='\033[31m'      # 红
+GREEN='\033[32m'    # 绿
+CYAN='\033[36m'     # 蓝
 RES='\033[0m'         # 清除颜色
- 
+
+need_verbose=""
 
 echoRed(){
 	echo -e "${RED}${1}${RES}"
 }
 
 echoGREEN(){
-	echo -e "${GREEN}${1}${RES}"
+	if [[ "$need_verbose" != "" ]]; then
+		echo -e "${GREEN}${1}${RES}"
+	fi
 }
 
 echoCYAN(){
-	echo -e "${CYAN}${1}${RES}"
+	if [[ "$need_verbose" != "" ]]; then
+		echo -e "${CYAN}${1}${RES}"
+	fi
 }
 
-if [ $# -lt 4 ]; then
-	echoGREEN '请输入参数：'
-	echoGREEN '\t参数1：ipa目录'
-	echoGREEN '\t参数2：描述文件目录'
-	echoGREEN '\t参数3：plist目录'
-	echoGREEN "\t参数4：证书名称，注意用 \"\" 双引号包起来，因为有可能有空格"
-	echoGREEN '\t参数5：新的bundleid，如果不修改可以不输入此参数'
+echoResult() {
+	echo -e "${GREEN}${1}${RES}"
+}
+
+usage(){
+	echoResult '请输入参数：'
+	echoResult '\t必传参数1：ipa目录'
+	echoResult '\t必传参数2：描述文件目录'
+	echoResult "\t必传参数3：证书名称或证书SHA-1值，注意用 \"\" 双引号包起来，因为有可能有空格"
+	echoResult '\t -b new_bundle_identifier'
+	echoResult '\t -e entitlements file 目录用于签名'
+}
+
+if [ $# -lt 3 ]; then
+	usage
+	exit
+fi
+
+original_ipa_file=""
+mobileprovision_file=""
+certificate_name=""
+if ! ([ -f "$1" ]); then
+	echoRed "参数1：IPA文件不存在 ${1}"
 	exit
 fi
 
 
-#参数顺序 ipa  .mobileprovision  plist 证书名称  新bundleid
-echoGREEN '-----------------输入参数---------------------'
-echoGREEN "参数1: "$1
-echoGREEN "参数2: "$2
-echoGREEN "参数3: "$3
-echoGREEN "参数4:  ${4}"
-echoGREEN "参数5: "$5
+if ! ([ -f "$2" ]); then
+	echoRed "参数2：描述文件不存在 ${2}"
+	exit
+fi
+
+
+if ([ "$3" == "" ]); then
+	echoRed "参数3：证书名称不能为空 ${3}"
+	exit
+fi
+
+
+original_ipa_file=$1
+mobileprovision_file=$2
+certificate_name=$3
+user_app_entitlements_file=""
+new_bundle_identifier=""
+sign_entitlements_file=""
+user_app_entitlements=""
+shift 3
+# 解析参数
+while [ "$1" != "" ]; do
+    case $1 in
+        -e | --entitlements )
+            shift
+            user_app_entitlements_file="$1"
+            user_app_entitlements="1"
+            ;;
+        -b | --bundle-id )
+            shift
+            new_bundle_identifier="$1"
+            ;;
+        -n | --version-number )
+            shift
+            VERSION_NUMBER="$1"
+            ;;
+        --short-version )
+            shift
+            SHORT_VERSION="$1"
+            ;;
+        --bundle-version )
+            shift
+            BUNDLE_VERSION="$1"
+            ;;
+        -v | --verbose )
+            need_verbose="--verbose"
+            ;;
+        -h | --help )
+            usage
+            ;;
+        * )
+            ;;
+    esac
+
+    # Next arg
+    shift
+done
+
+
+echoGREEN "-----------------输入参数---------------------"
+echoGREEN " 即将签名的IPA文件："${original_ipa_file}
+echoGREEN "    使用的描述文件："${mobileprovision_file}
+echoGREEN "     签名证书名称："${certificate_name}
+echoGREEN "     新bundleID："${new_bundle_identifier}
+echoGREEN "     entitlements文件目录："${user_app_entitlements_file}
 echoGREEN '---------------------------------------------'
 
-if ! ([ -e "$1" ]); then
-	echoRed "参数1：IPA文件不存在 "${1}
-	exit
-fi
 
-if ! ([ -e "$2" ]); then
-	echoRed "参数2：描述文件文件不存在 "${2}
-	exit
-fi
-
-if ! ([ -e "$3" ]); then
-	echoRed "参数3：plist文件不存在 "${3}
-	exit
+if [[ "$user_app_entitlements" == "1" ]]; then
+	if ! ([ -e "$user_app_entitlements_file" ]); then
+		echoRed "-e 参数：plist文件不存在 -> "${3}
+		exit
+	else
+		sign_entitlements_file=$user_app_entitlements_file
+	fi
 fi
 
 
-cer_name=""
-if ([ "$4" == "" ]); then
-	echoRed "参数4：证书名称不能为空 ${4}"
-	exit
-else
-	cer_name=$4;
-fi
-echoGREEN "签名证书名称: $4"
 
-
-
-new_bundleid=""
-
-if [ "$5" != "" ];then
-    new_bundleid=$5;
-fi
-
-echoGREEN "新bundleid: "$5
-
-
-# 描述文件路径
-mobileprovision_file=$2
-
-IpaFileName=$(basename $1 .ipa)
+IpaFileName=$(basename $original_ipa_file .ipa)
 
 #存放ipa的目录
-ipa_path=$(dirname $1)
-unzip_path=${ipa_path}/temp_unzip
+original_ipa_path=$(dirname $original_ipa_file)
+unzip_path=${original_ipa_path}/temp_unzip
 
-rm -rf ${ipa_path}/${IpaFileName}-resign.ipa
+rm -rf ${original_ipa_path}/${IpaFileName}-resign.ipa
 
-unzip -oq $1 -d ${unzip_path}
+unzip -oq $original_ipa_file -d ${unzip_path}
 
-# 将描述文件转换成plist
-mobileprovision_plist=${unzip_path}"/embedded.plist"
 
-#生成plist主要是查看描述文件的信息
-security cms -D -i $mobileprovision_file  > $mobileprovision_plist
 
-teamId=`/usr/libexec/PlistBuddy -c "Print Entitlements:com.apple.developer.team-identifier" $mobileprovision_plist`
-application_identifier=`/usr/libexec/PlistBuddy -c "Print Entitlements:application-identifier" $mobileprovision_plist`
+if ([ "$sign_entitlements_file" == "" ]); then
+	# 将描述文件转换成plist
+	mobileprovision_plist=${unzip_path}"/mobileprovision.plist"
 
-#描述文件budnleid
-mobileprovision_bundleid=${application_identifier/$teamId./}
-echoGREEN '描述文件中的bundleid: '$mobileprovision_bundleid
+	#生成plist主要是查看描述文件的信息
+	security cms -D -i $mobileprovision_file  > $mobileprovision_plist
 
-rm -rf $mobileprovision_plist
+	teamId=`/usr/libexec/PlistBuddy -c "Print Entitlements:com.apple.developer.team-identifier" $mobileprovision_plist`
+	application_identifier=`/usr/libexec/PlistBuddy -c "Print Entitlements:application-identifier" $mobileprovision_plist`
+
+	#描述文件budnleid
+	mobileprovision_bundleid=${application_identifier/$teamId./}
+	# echoGREEN '描述文件中的bundleid: '$mobileprovision_bundleid
+	mobileprovision_entitlements_plist=${unzip_path}"/mobileprovision_entitlements.plist"
+	/usr/libexec/PlistBuddy -x -c "Print Entitlements" "$mobileprovision_plist" > "$mobileprovision_entitlements_plist"
+	sign_entitlements_file=$mobileprovision_entitlements_plist
+fi
+
+echoGREEN "使用的entitlemetns文件："$sign_entitlements_file
+
 
 #filePath  例如  xx.app   xx.appex  xx.dylib  xx.framework
 signFile(){
 	filePath=$1;
 	suffixStr=${filePath##*.};
-	newID=$new_bundleid;
+	newID=$new_bundle_identifier;
 	echoCYAN "正在签名  ${filePath}"
 	if [ "$newID" != "" ] && [ "$suffixStr" != "framework" ] && [ "$suffixStr" != "dylib" ];then
 		
 		bundleId=$(/usr/libexec/PlistBuddy -c "Print CFBundleIdentifier " "${filePath}/Info.plist")
-		ExtensionID=${bundleId/"$OldbundleId"/"$new_bundleid"} 
+		ExtensionID=${bundleId/"$OldbundleId"/"$new_bundle_identifier"} 
 		/usr/libexec/PlistBuddy -c "Set CFBundleIdentifier $ExtensionID" "${filePath}/Info.plist"
 
 		echoCYAN "bundlieId 旧ID：${bundleId}  新ID：${ExtensionID}"
 
 		WKCompanionAppBundleIdentifier=`/usr/libexec/PlistBuddy -c "Print WKCompanionAppBundleIdentifier" "${filePath}/Info.plist" 2> /dev/null`
 		if [ "$WKCompanionAppBundleIdentifier" != "" ];then
-			echoCYAN "WKCompanionAppBundleIdentifier 旧ID：${WKCompanionAppBundleIdentifier}  新ID：${new_bundleid}"
-			/usr/libexec/PlistBuddy -c "Set WKCompanionAppBundleIdentifier $new_bundleid" "${filePath}/Info.plist"
+			echoCYAN "WKCompanionAppBundleIdentifier 旧ID：${WKCompanionAppBundleIdentifier}  新ID：${new_bundle_identifier}"
+			/usr/libexec/PlistBuddy -c "Set WKCompanionAppBundleIdentifier $new_bundle_identifier" "${filePath}/Info.plist"
 		fi
 		WKAppBundleIdentifier=`/usr/libexec/PlistBuddy -c "Print NSExtension:NSExtensionAttributes:WKAppBundleIdentifier" "${filePath}/Info.plist" 2> /dev/null`
 		if [ "$WKAppBundleIdentifier" != "" ];then
-			NEW_WKAppBundleIdentifier=${WKAppBundleIdentifier/"$OldbundleId"/"$new_bundleid"} 
+			NEW_WKAppBundleIdentifier=${WKAppBundleIdentifier/"$OldbundleId"/"$new_bundle_identifier"} 
 			echoCYAN "WKAppBundleIdentifier 旧ID：${WKAppBundleIdentifier}  新ID：${NEW_WKAppBundleIdentifier}"
 			/usr/libexec/PlistBuddy -c "Set NSExtension:NSExtensionAttributes:WKAppBundleIdentifier ${NEW_WKAppBundleIdentifier}" "${filePath}/Info.plist"
 		fi
@@ -131,13 +192,12 @@ signFile(){
 	fi
 
 
-
 	rm -rf "${filePath}/_CodeSignature"
 
 	#拷贝配置文件到Payload目录下
 	cp $mobileprovision_file ${filePath}/embedded.mobileprovision
 
-	(/usr/bin/codesign -vvv -fs "$cer_name" --entitlements=entitlements.plist "$filePath") || {
+	(/usr/bin/codesign $need_verbose -f -s "$certificate_name" --entitlements=$sign_entitlements_file "$filePath") || {
 		echoRed "签名失败 ${filePath}"
 		rm -rf ${unzip_path}
 		exit
@@ -152,7 +212,7 @@ AppPackageName=$(basename $AppPackageName .app)
 echoGREEN '包名：'$AppPackageName
 OldbundleId=$(/usr/libexec/PlistBuddy -c "Print CFBundleIdentifier " "${unzip_path}/Payload/${AppPackageName}.app/Info.plist")
 echoGREEN '旧bundleid：'$OldbundleId;
-
+echoGREEN '---------------------------------------------'
 
 frameworkPath=${unzip_path}/Payload/${AppPackageName}.app/Frameworks
 
@@ -202,8 +262,9 @@ echoGREEN '主App签名结束'
 
 cd $unzip_path
 echoGREEN '开始压缩生成ipa'
-zip -rq ${ipa_path}/${IpaFileName}-resign.ipa ./*
+zip -rq ${original_ipa_path}/${IpaFileName}-resign.ipa ./*
 rm -rf ${unzip_path}/
 echoGREEN '压缩完成'
-echoGREEN "######################  重新签名成功  ##############################"
+echoGREEN "新IPA目录："${original_ipa_path}/${IpaFileName}-resign.ipa
+echoResult "######################  重新签名成功  ##############################"
 
