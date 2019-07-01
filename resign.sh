@@ -1,5 +1,5 @@
 
-#!/bin/sh
+#!/bin/bash
 
 RED='\033[31m'      # 红
 GREEN='\033[32m'    # 绿
