@@ -6,7 +6,7 @@ ipa重签名 支持重签带扩展的app和带watch的app，支持重签名frame
 - 2.然后创建此APP id的描述文件并下载到本地
 - 3.cd 到resigh.sh 目录下
 - 4.运行脚本 参数顺序: ipa位置 描述文件 证书名称 （注意证书名需要加双引号,因为中间可能有空格或者使用SHA-1值）
-![image](https://github.com/lsmakethebest/Resign/blob/master/2.png)
+![image](https://github.com/lsmakethebest/LSResign/blob/master/2.png)
 ```
 ./resign.sh /Users/liusong/Desktop/ipa/test/test.ipa  /Users/liusong/Desktop/ipa/commytogoresign.mobileprovision "iPhone Distribution: XXXXX  Technology Co., Ltd"
 ```
