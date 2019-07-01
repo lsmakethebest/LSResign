@@ -8,7 +8,7 @@ ipa重签名
 - 4.运行脚本 参数顺序: ipa位置 描述文件 证书名称 （注意证书名需要加双引号,因为中间可能有空格或者使用SHA-1值）
 ![image](https://github.com/lsmakethebest/Resign/blob/master/2.png)
 ```
-./resign.sh /Users/liusong/Desktop/ipa/test/test.ipa  /Users/liusong/Desktop/ipa/commytogoresign.mobileprovision /Users/liusong/Desktop/ipa/entitlements.plist "iPhone Distribution: XXXXX  Technology Co., Ltd"
+./resign.sh /Users/liusong/Desktop/ipa/test/test.ipa  /Users/liusong/Desktop/ipa/commytogoresign.mobileprovision "iPhone Distribution: XXXXX  Technology Co., Ltd"
 或者 -b 参数代表新bundleid --verbose代表显示日志过程
  ./resign.sh /Users/liusong/Desktop/ipa/test/test.ipa  /Users/liusong/Desktop/ipa/commytogoresign.mobileprovision 0EE9ABD67FE7F04A4AF8ED62D5E2B95F83FECCD6 -b com.liusong.newbundlleid --verbose
 ```
