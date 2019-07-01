@@ -17,9 +17,9 @@ ipa重签名
 -  5.会在同目录下 生成一个name-resign.ipa
 
 ## 注意
-1.使用的描述文件是app-store重签后安装不了，dev或ad-hoc重签没问题
-2.导出app_store包，重签名后安装闪退，重签dev，ad_hoc没问题
-3.要想签名带推送等service等的ipa ，要确保使用的描述文件也带此service，否则会导致ipa可以安装，但是注册推送失败，
-4.如果自定义entitlement.plist文件 里面的key对应的值如果和描述文件里相同key的值不同会导致安装失败，此时必须以描述文件为准，比如aps-environment想要为production必须下载ad-hoc描述文件，如果想要development就得下载development描述文件，而不能直接改entitlement.plist里面的值
+- 1.使用的描述文件是app-store重签后安装不了，dev或ad-hoc重签没问题
+- 2.导出app_store包，重签名后安装闪退，重签dev，ad_hoc没问题
+- 3.要想签名带推送等service等的ipa ，要确保使用的描述文件也带此service，否则会导致ipa可以安装，但是注册推送失败，
+- 4.如果自定义entitlement.plist文件 里面的key对应的值如果和描述文件里相同key的值不同会导致安装失败，此时必须以描述文件为准，比如aps-environment想要为production必须下载ad-hoc描述文件，如果想要development就得下载development描述文件，而不能直接改entitlement.plist里面的值
 也不能在entitlements.plist文件里乱加key，否则会导致安装失败
-5.bundleID可以改，但是改成新的bundleID，如果要推送则得用新bundleid的推送证书
+- 5.bundleID可以改，但是改成新的bundleID，如果要推送则得用新bundleid的推送证书
