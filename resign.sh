@@ -111,11 +111,11 @@ done
 
 
 echoGREEN "-----------------输入参数---------------------"
-echoGREEN " 即将签名的IPA文件："${original_ipa_file}
-echoGREEN "    使用的描述文件："${mobileprovision_file}
-echoGREEN "     签名证书名称："${certificate_name}
-echoGREEN "     新bundleID："${new_bundle_identifier}
-echoGREEN "     entitlements文件目录："${user_app_entitlements_file}
+echoGREEN " 即将签名的IPA文件：${original_ipa_file}"
+echoGREEN "    使用的描述文件：${mobileprovision_file}"
+echoGREEN "     签名证书名称：${certificate_name}"
+echoGREEN "     新bundleID：${new_bundle_identifier}"
+echoGREEN "     entitlements文件目录：${user_app_entitlements_file}"
 echoGREEN '---------------------------------------------'
 
 
@@ -124,48 +124,47 @@ if [[ "$user_app_entitlements" == "1" ]]; then
 		echoRed "-e 参数：plist文件不存在 -> "${3}
 		exit
 	else
-		sign_entitlements_file=$user_app_entitlements_file
+		sign_entitlements_file="$user_app_entitlements_file"
 	fi
 fi
 
 
 
-IpaFileName=$(basename $original_ipa_file .ipa)
+IpaFileName=$(basename "$original_ipa_file" .ipa)
 
 #存放ipa的目录
-original_ipa_path=$(dirname $original_ipa_file)
-unzip_path=${original_ipa_path}/temp_unzip
+original_ipa_path=$(dirname "$original_ipa_file")
+unzip_path="${original_ipa_path}"/temp_unzip
 
 rm -rf ${original_ipa_path}/${IpaFileName}-resign.ipa
 
-unzip -oq $original_ipa_file -d ${unzip_path}
-
+unzip -oq "$original_ipa_file" -d "${unzip_path}"
 
 
 if ([ "$sign_entitlements_file" == "" ]); then
 	# 将描述文件转换成plist
-	mobileprovision_plist=${unzip_path}"/mobileprovision.plist"
+	mobileprovision_plist="${unzip_path}/mobileprovision.plist"
 
 	#生成plist主要是查看描述文件的信息
-	security cms -D -i $mobileprovision_file  > $mobileprovision_plist
+	security cms -D -i "$mobileprovision_file"  > "$mobileprovision_plist"
 
-	teamId=`/usr/libexec/PlistBuddy -c "Print Entitlements:com.apple.developer.team-identifier" $mobileprovision_plist`
-	application_identifier=`/usr/libexec/PlistBuddy -c "Print Entitlements:application-identifier" $mobileprovision_plist`
+	teamId=`/usr/libexec/PlistBuddy -c "Print Entitlements:com.apple.developer.team-identifier" "$mobileprovision_plist"`
+	application_identifier=`/usr/libexec/PlistBuddy -c "Print Entitlements:application-identifier" "$mobileprovision_plist"`
 
 	#描述文件budnleid
 	mobileprovision_bundleid=${application_identifier/$teamId./}
 	# echoGREEN '描述文件中的bundleid: '$mobileprovision_bundleid
-	mobileprovision_entitlements_plist=${unzip_path}"/mobileprovision_entitlements.plist"
+	mobileprovision_entitlements_plist="${unzip_path}/mobileprovision_entitlements.plist"
 	/usr/libexec/PlistBuddy -x -c "Print Entitlements" "$mobileprovision_plist" > "$mobileprovision_entitlements_plist"
-	sign_entitlements_file=$mobileprovision_entitlements_plist
+	sign_entitlements_file="$mobileprovision_entitlements_plist"
 fi
 
-echoGREEN "使用的entitlemetns文件："$sign_entitlements_file
+echoGREEN "使用的entitlemetns文件：$sign_entitlements_file"
 
 
 #filePath  例如  xx.app   xx.appex  xx.dylib  xx.framework
 signFile(){
-	filePath=$1;
+	filePath="$1";
 	suffixStr=${filePath##*.};
 	newID=$new_bundle_identifier;
 	echoCYAN "正在签名  ${filePath}"
@@ -195,11 +194,11 @@ signFile(){
 	rm -rf "${filePath}/_CodeSignature"
 
 	#拷贝配置文件到Payload目录下
-	cp $mobileprovision_file ${filePath}/embedded.mobileprovision
+	cp "$mobileprovision_file" "${filePath}/embedded.mobileprovision"
 
-	(/usr/bin/codesign $need_verbose -f -s "$certificate_name" --entitlements=$sign_entitlements_file "$filePath") || {
+	(/usr/bin/codesign $need_verbose -f -s "$certificate_name" --entitlements="$sign_entitlements_file" "$filePath") || {
 		echoRed "签名失败 ${filePath}"
-		rm -rf ${unzip_path}
+		rm -rf "${unzip_path}"
 		exit
 	}
 	echoCYAN "签名结束 ${filePath}"
@@ -207,36 +206,36 @@ signFile(){
 
 
 
-AppPackageName=$(ls ${unzip_path}/Payload | grep ".app$" | head -1)
+AppPackageName=$(ls "${unzip_path}/Payload" | grep ".app$" | head -1)
 AppPackageName=$(basename $AppPackageName .app)
 echoGREEN '包名：'$AppPackageName
 OldbundleId=$(/usr/libexec/PlistBuddy -c "Print CFBundleIdentifier " "${unzip_path}/Payload/${AppPackageName}.app/Info.plist")
 echoGREEN '旧bundleid：'$OldbundleId;
 echoGREEN '---------------------------------------------'
 
-frameworkPath=${unzip_path}/Payload/${AppPackageName}.app/Frameworks
+frameworkPath="${unzip_path}/Payload/${AppPackageName}.app/Frameworks"
 
 if [ -d "${frameworkPath}" ]; then
 	echoCYAN '存在Frameworks'
 	echoGREEN '开始签名Frameworks'
-	for file in $frameworkPath/*; do
-	    signFile $file
+	for file in "$frameworkPath"/*; do
+	    signFile "$file"
 	done
 	echoGREEN '签名Frameworks结束'
 fi
 
-PlugInsPath=${unzip_path}/Payload/${AppPackageName}.app/PlugIns
+PlugInsPath="${unzip_path}/Payload/${AppPackageName}.app/PlugIns"
 
 if [ -d "${PlugInsPath}" ]; then
 	echoCYAN '存在普通扩展'
 	echoGREEN '开始签名普通扩展'
-	for file in $PlugInsPath/*; do
-		signFile $file
+	for file in "$PlugInsPath"/*; do
+		signFile "$file"
 	done
 	echoGREEN '普通扩展签名结束'
 fi
 
-WatchAppPath=${unzip_path}/Payload/${AppPackageName}.app/Watch
+WatchAppPath="${unzip_path}/Payload/${AppPackageName}.app/Watch"
 if [ -d "${WatchAppPath}" ]; then
 	WatchAppPackageName=$(ls ${WatchAppPath} | grep ".app$" | head -1)
 	WatchAppPackageName=$(basename $WatchAppPackageName .app)
@@ -244,8 +243,8 @@ if [ -d "${WatchAppPath}" ]; then
 	if [ -d "${watchPlugInsPath}" ]; then
 		echoCYAN 'Watch APP 存在扩展'
 		echoGREEN '开始签名Watch App的扩展'
-		for file in $watchPlugInsPath/*; do
-			signFile $file
+		for file in "$watchPlugInsPath"/*; do
+			signFile "$file"
 		done
 		echoGREEN 'Watch App的扩展签名结束'
 	fi
@@ -260,11 +259,11 @@ echoGREEN '开始签名主App'
 signFile "${unzip_path}/Payload/${AppPackageName}.app"
 echoGREEN '主App签名结束'
 
-cd $unzip_path
+cd "$unzip_path"
 echoGREEN '开始压缩生成ipa'
-zip -rq ${original_ipa_path}/${IpaFileName}-resign.ipa ./*
-rm -rf ${unzip_path}/
+zip -rq "${original_ipa_path}/${IpaFileName}-resign.ipa" ./*
+rm -rf "${unzip_path}/"
 echoGREEN '压缩完成'
-echoGREEN "新IPA目录："${original_ipa_path}/${IpaFileName}-resign.ipa
+echoGREEN "新IPA目录：${original_ipa_path}/${IpaFileName}-resign.ipa"
 echoResult "######################  重新签名成功  ##############################"
 
