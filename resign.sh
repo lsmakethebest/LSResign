@@ -194,10 +194,15 @@ signFile(){
 	fi
 
 
-	rm -rf "${filePath}/_CodeSignature"
+	
 
-	#拷贝配置文件到Payload目录下
-	cp "$mobileprovision_file" "${filePath}/embedded.mobileprovision"
+
+	if [ "$suffixStr" != "dylib" ];then
+		rm -rf "${filePath}/_CodeSignature"
+		#拷贝配置文件到Payload目录下
+		cp "$mobileprovision_file" "${filePath}/embedded.mobileprovision"
+	fi
+	
 
 	(/usr/bin/codesign $need_verbose -f -s "$certificate_name" --entitlements="$sign_entitlements_file" "$filePath") || {
 		echoRed "签名失败 ${filePath}"
