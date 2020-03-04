@@ -32,9 +32,11 @@ usage(){
 	echoResult '请输入参数：'
 	echoResult '\t必传参数1：ipa目录'
 	echoResult '\t必传参数2：描述文件目录'
-	echoResult "\t必传参数3：证书名称或证书SHA-1值，注意用 \"\" 双引号包起来，因为有可能有空格"
-	echoResult '\t -b new_bundle_identifier'
-	echoResult '\t -e entitlements file 目录用于签名'
+	echoResult "\t必传参数3：证书SHA-1值，注意用 \"\" 双引号包起来，因为有可能有空格,内部会自动过滤空格"
+	echoResult '\t可选参数 -b new_bundle_identifier'
+	echoResult '\t可选参数 -e entitlements_file 目录用于签名，不指定则使用描述文件里的配置自动生成 entitlements_file'
+	echoResult '\t可选参数 -v 打印详细日志'
+	echoResult '\t可选参数 -h 查看使用说明'
 }
 
 if [ $# -lt 3 ]; then
@@ -65,7 +67,8 @@ fi
 
 original_ipa_file=$1
 mobileprovision_file=$2
-certificate_name=$3
+temp_certificate_name=$3
+certificate_name=${temp_certificate_name// /}
 user_app_entitlements_file=""
 new_bundle_identifier=""
 sign_entitlements_file=""
@@ -237,9 +240,8 @@ fi
 
 WatchAppPath="${unzip_path}/Payload/${AppPackageName}.app/Watch"
 if [ -d "${WatchAppPath}" ]; then
-	WatchAppPackageName=$(ls ${WatchAppPath} | grep ".app$" | head -1)
-	WatchAppPackageName=$(basename $WatchAppPackageName .app)
-	watchPlugInsPath=${WatchAppPath}/${WatchAppPackageName}.app/PlugIns
+	WatchAppName=$(ls ${WatchAppPath} | grep ".app$" | head -1)
+	watchPlugInsPath=${WatchAppPath}/${WatchAppName}/PlugIns
 	if [ -d "${watchPlugInsPath}" ]; then
 		echoCYAN 'Watch APP 存在扩展'
 		echoGREEN '开始签名Watch App的扩展'
@@ -250,10 +252,13 @@ if [ -d "${WatchAppPath}" ]; then
 	fi
 	echoGREEN '存在Watch App'
 	echoGREEN '开始签名Watch App'
-	signFile "${WatchAppPath}/${WatchAppPackageName}.app"
+	signFile "${WatchAppPath}/${WatchAppName}"
 	echoGREEN 'Watch App签名结束'
 
 fi
+
+#设置文件共享
+#/usr/libexec/PlistBuddy -c "Set :UIFileSharingEnabled true" "${unzip_path}/Payload/${AppPackageName}.app/Info.plist"
 
 echoGREEN '开始签名主App'
 signFile "${unzip_path}/Payload/${AppPackageName}.app"

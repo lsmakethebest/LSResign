@@ -5,14 +5,16 @@ ipa重签名 支持重签带扩展的app和带watch的app，支持重签名frame
 - 1.先到账号里（企业账号或个人账号均可）创建一个APP ID任意此处假设为com.liusong.resign
 - 2.然后创建此APP id的描述文件并下载到本地
 - 3.cd 到resigh.sh 目录下
-- 4.运行脚本 参数顺序: ipa位置 描述文件 证书名称 （注意证书名需要加双引号,因为中间可能有空格或者使用SHA-1值）
+- 4.运行脚本 参数顺序: ipa位置 描述文件 证书SHA-1值 （注意需要加双引号,因为中间可能有空格，内部会自动过滤空格）
 ![image](https://github.com/lsmakethebest/LSResign/blob/master/2.png)
+- SHA-1值可以直接从keychain拷贝过来，内部会自动过滤空格
 ```
-./resign.sh /Users/liusong/Desktop/ipa/test/test.ipa  /Users/liusong/Desktop/ipa/commytogoresign.mobileprovision "iPhone Distribution: XXXXX  Technology Co., Ltd"
+./resign.sh /Users/liusong/Desktop/ipa/test/test.ipa  /Users/liusong/Desktop/ipa/commytogoresign.mobileprovision "63 3A 44 94 F3 C0 1F 3F B6 28 B6 DF 50 22 EF EF 92 05 9D A6"
 ```
-或者 -b 参数代表新bundleid --verbose代表显示日志过程
+-b 参数代表新bundleid 
+-v 代表显示日志过程
 ```
-./resign.sh /Users/liusong/Desktop/ipa/test/test.ipa  /Users/liusong/Desktop/ipa/commytogoresign.mobileprovision 0EE9ABD67FE7F04A4AF8ED62D5E2B95F83FECCD6 -b com.liusong.newbundlleid --verbose
+./resign.sh /Users/liusong/Desktop/ipa/test/test.ipa  /Users/liusong/Desktop/ipa/commytogoresign.mobileprovision 0EE9ABD67FE7F04A4AF8ED62D5E2B95F83FECCD6 -b com.liusong.newbundlleid -v
 ```
 -  5.会在同目录下 生成一个name-resign.ipa
 
