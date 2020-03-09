@@ -25,3 +25,4 @@ ipa重签名 支持重签带扩展的app和带watch的app，支持重签名frame
 - 4.如果自定义entitlement.plist文件 里面的key对应的值如果和描述文件里相同key的值不同会导致安装失败，此时必须以描述文件为准，比如aps-environment想要为production必须下载ad-hoc描述文件，如果想要development就得下载development描述文件，而不能直接改entitlement.plist里面的值
 也不能在entitlements.plist文件里乱加key，否则会导致安装失败
 - 5.bundleID可以改，但是改成新的bundleID，如果要推送则得用新bundleid的推送证书
+- 6.描述文件有推送能力，但是使用自定义的entitlement.plist没有配置推送能力，最终app不具有推送能力，也就是说最终app的权限以entitlement.plist为准而不是描述文件
